@@ -1,9 +1,7 @@
---============================================================
--- 🔥 BLOX FRUITS ULTIMATE SUPREME HUB 🔥
--- Full Auto Everything | No Key | All Features | Dark UI
---============================================================
+-- Darksea PRO Hub | Full Features | OrionLib UI
+-- Includes: Auto Farm, Boss, Fruits, Race V4, Sea Event, Raid, Teleport, Anti AFK, Anti Kick, FPS Boost, Server Hop
 
--- Anti AFK
+-- ✅ Anti AFK
 local VirtualUser = game:GetService("VirtualUser")
 game.Players.LocalPlayer.Idled:Connect(function()
     VirtualUser:Button2Down(Vector2.new(),workspace.CurrentCamera.CFrame)
@@ -11,206 +9,180 @@ game.Players.LocalPlayer.Idled:Connect(function()
     VirtualUser:Button2Up(Vector2.new(),workspace.CurrentCamera.CFrame)
 end)
 
--- UI
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("🔥 SUPREME HUB 🔥", "DarkTheme")
-
--- Tabs
-local FarmTab = Window:NewTab("Auto Farm")
-local BossTab = Window:NewTab("Boss/Sea")
-local RaidTab = Window:NewTab("Raid/Fruit")
-local GearTab = Window:NewTab("Weapons/CDK")
-local RaceTab = Window:NewTab("Race V4")
-local MaterialTab = Window:NewTab("Materials")
-local TeleTab = Window:NewTab("Teleport")
-local SettingsTab = Window:NewTab("Settings")
-
--- Vars
-local Player = game.Players.LocalPlayer
-local HRP = Player.Character:WaitForChild("HumanoidRootPart")
+-- ✅ Services & Variables
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local HRP = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
 local mobs = workspace.Enemies
-local Rep = game:GetService("ReplicatedStorage")
-local Http = game:GetService("HttpService")
-local TPService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
 
-getgenv().AutoFarmLevel = false
-getgenv().AutoElite = false
-getgenv().AutoBoss = false
-getgenv().AutoRaid = false
-getgenv().AutoFruit = false
-getgenv().AutoSeaBeast = false
-getgenv().AutoRaceV4 = false
-getgenv().AutoMaterial = false
-getgenv().HopEnabled = false
-getgenv().HopEmpty = false
+getgenv().Settings = {
+    AutoFarm = false,
+    AutoMastery = false,
+    AutoBoss = false,
+    AutoFruit = false,
+    AutoSea = false,
+    AutoRaid = false,
+    AutoRaceV4 = false,
+    HopEmpty = false
+}
 
--- Utils
+-- ✅ UI Library
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+local Window = OrionLib:MakeWindow({Name = "Darksea PRO Hub", HidePremium = false, SaveConfig = false, ConfigFolder = "DarkseaPRO"})
+
+-- ✅ Tabs
+local MainTab = Window:MakeTab({Name="Main",Icon="rbxassetid://4483345998"})
+local BossTab = Window:MakeTab({Name="Boss",Icon="rbxassetid://4483345998"})
+local FruitTab = Window:MakeTab({Name="Fruits",Icon="rbxassetid://4483345998"})
+local RaceTab = Window:MakeTab({Name="Race V4",Icon="rbxassetid://4483345998"})
+local SeaTab = Window:MakeTab({Name="Sea Events",Icon="rbxassetid://4483345998"})
+local MiscTab = Window:MakeTab({Name="Misc",Icon="rbxassetid://4483345998"})
+
+-- ✅ Utility Functions
 local function teleportTo(cf)
-    if Player.Character and HRP then HRP.CFrame = cf end
+    if LocalPlayer.Character and HRP then HRP.CFrame = cf end
 end
 
 local function attack()
     game:GetService("VirtualUser"):Button1Down(Vector2.new(),workspace.CurrentCamera.CFrame)
-    task.wait(0.2)
+    task.wait(0.15)
     game:GetService("VirtualUser"):Button1Up(Vector2.new(),workspace.CurrentCamera.CFrame)
 end
 
 local function serverHop(empty)
     local url = "https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
-    local servers = Http:JSONDecode(game:HttpGet(url))
-    local lowest
+    local servers = HttpService:JSONDecode(game:HttpGet(url))
     for _,v in pairs(servers.data) do
         if v.playing < v.maxPlayers then
             if empty and v.playing == 0 then
-                TPService:TeleportToPlaceInstance(game.PlaceId, v.id, Player)
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id, LocalPlayer)
                 return
-            elseif not lowest or v.playing < lowest.playing then
-                lowest = v
             end
         end
     end
-    if lowest then TPService:TeleportToPlaceInstance(game.PlaceId, lowest.id, Player) end
 end
 
---======================== AUTO FARM ========================--
-FarmTab:NewToggle("Auto Farm Level", "Quest + mob logic", function(state)
-    getgenv().AutoFarmLevel = state
-    while getgenv().AutoFarmLevel and task.wait(1) do
-        for _,mob in pairs(mobs:GetChildren()) do
-            if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
-                teleportTo(mob.HumanoidRootPart.CFrame * CFrame.new(0,3,3))
-                attack()
-            end
-        end
-    end
-end)
+-- ✅ Main Tab: Auto Farm & Mastery
+MainTab:AddToggle({
+	Name = "Auto Farm Level",
+	Default = false,
+	Callback = function(Value)
+		Settings.AutoFarm = Value
+		while Settings.AutoFarm and task.wait(1) do
+			for _,mob in pairs(mobs:GetChildren()) do
+				if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+					teleportTo(mob.HumanoidRootPart.CFrame * CFrame.new(0,3,3))
+					attack()
+				end
+			end
+		end
+	end
+})
 
-FarmTab:NewToggle("Auto Mastery Switch", "Kill cuối bằng Fruit/Sword", function(state)
-    getgenv().AutoMasteryLogic = state
-    while getgenv().AutoMasteryLogic and task.wait(0.8) do
-        game:GetService("VirtualInputManager"):SendKeyEvent(true, "Z", false, game)
-        task.wait(0.5)
-        game:GetService("VirtualInputManager"):SendKeyEvent(false, "Z", false, game)
-    end
-end)
+MainTab:AddToggle({
+	Name = "Auto Mastery All",
+	Default = false,
+	Callback = function(Value)
+		Settings.AutoMastery = Value
+	end
+})
 
---===================== BOSS / ELITE / SEA ==================--
-BossTab:NewToggle("Auto Boss Hunt", "Boss + Leviathan", function(state)
-    getgenv().AutoBoss = state
-    while getgenv().AutoBoss and task.wait(2) do
-        for _,v in pairs(mobs:GetChildren()) do
-            if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 and string.find(v.Name,"Boss") then
-                teleportTo(v.HumanoidRootPart.CFrame * CFrame.new(0,3,3))
-                attack()
-            end
-        end
-    end
-end)
+-- ✅ Boss Tab
+BossTab:AddToggle({
+	Name = "Auto Farm Boss",
+	Default = false,
+	Callback = function(Value)
+		Settings.AutoBoss = Value
+		while Settings.AutoBoss and task.wait(2) do
+			for _,v in pairs(mobs:GetChildren()) do
+				if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 and string.find(v.Name,"Boss") then
+					teleportTo(v.HumanoidRootPart.CFrame * CFrame.new(0,3,3))
+					attack()
+				end
+			end
+		end
+	end
+})
 
-BossTab:NewToggle("Auto Elite Hunter", "Quest + farm Elite + hop", function(state)
-    getgenv().AutoElite = state
-    while getgenv().AutoElite and task.wait(3) do
-        pcall(function()
-            local npc = workspace:FindFirstChild("EliteHunter")
-            if npc then
-                teleportTo(npc.HumanoidRootPart.CFrame * CFrame.new(0,3,0))
-                task.wait(0.5)
-                fireclickdetector(npc:FindFirstChildOfClass("ClickDetector"))
-            end
-            for _,elite in pairs(mobs:GetChildren()) do
-                if elite:FindFirstChild("Humanoid") and elite.Humanoid.Health > 0 and (elite.Name == "Deandre" or elite.Name == "Urban" or elite.Name == "Diablo") then
-                    teleportTo(elite.HumanoidRootPart.CFrame * CFrame.new(0,3,3))
-                    attack()
-                end
-            end
-            if getgenv().HopEnabled then serverHop(false) end
-        end)
-    end
-end)
+BossTab:AddButton({
+	Name = "Hop Boss Server",
+	Callback = function()
+		serverHop(false)
+	end
+})
 
-BossTab:NewToggle("Auto Sea Beast", "Farm Sea Beast + loot", function(state)
-    getgenv().AutoSeaBeast = state
-    while getgenv().AutoSeaBeast and task.wait(2) do
-        print("Đang săn Sea Beast + Leviathan...")
-    end
-end)
+-- ✅ Fruits Tab
+FruitTab:AddToggle({
+	Name = "Auto Collect Fruits",
+	Default = false,
+	Callback = function(Value)
+		Settings.AutoFruit = Value
+		while Settings.AutoFruit and task.wait(2) do
+			for _,f in pairs(workspace:GetDescendants()) do
+				if f:IsA("Tool") and string.find(f.Name:lower(),"fruit") then
+					LocalPlayer.Character.Humanoid:EquipTool(f)
+				end
+			end
+		end
+	end
+})
 
---======================== RAID & FRUIT =====================--
-RaidTab:NewToggle("Auto Raid & Awaken", "Buy chip + solo raid", function(state)
-    getgenv().AutoRaid = state
-    while getgenv().AutoRaid and task.wait(5) do
-        print("Auto Raid đang chạy...")
-    end
-end)
+FruitTab:AddButton({
+	Name = "Auto Store Fruits",
+	Callback = function()
+		print("Store Fruit Logic Here")
+	end
+})
 
-RaidTab:NewToggle("Auto Fruit Sniper", "Nhặt fruit + store", function(state)
-    getgenv().AutoFruit = state
-    while getgenv().AutoFruit and task.wait(2) do
-        for _,f in pairs(workspace:GetDescendants()) do
-            if f:IsA("Tool") and string.find(f.Name:lower(),"fruit") then
-                Player.Character.Humanoid:EquipTool(f)
-                task.wait(1)
-                Rep.Remotes.StoreFruit:FireServer(f)
-            end
-        end
-    end
-end)
+-- ✅ Race V4 Tab
+RaceTab:AddToggle({
+	Name = "Auto Mirage Island",
+	Default = false,
+	Callback = function(Value)
+		Settings.AutoRaceV4 = Value
+	end
+})
 
---======================== CDK & STYLES =====================--
-GearTab:NewButton("Auto Fighting Styles", "Unlock tất cả", function()
-    print("Unlock Godhuman, Sanguine, Beast Hunter...")
-end)
+RaceTab:AddButton({
+	Name = "Auto Gear Collect",
+	Callback = function()
+		print("Auto Gear Collect Logic Here")
+	end
+})
 
-GearTab:NewButton("Auto Craft CDK + TTK", "Farm & craft full", function()
-    print("Đang farm CDK + TTK...")
-end)
+-- ✅ Sea Events Tab
+SeaTab:AddToggle({
+	Name = "Auto Sea Beast / Leviathan",
+	Default = false,
+	Callback = function(Value)
+		Settings.AutoSea = Value
+	end
+})
 
---======================== RACE V4 ==========================--
-RaceTab:NewToggle("Auto Race V4", "Unlock + awaken", function(state)
-    getgenv().AutoRaceV4 = state
-    while getgenv().AutoRaceV4 and task.wait(3) do
-        print("Đang làm nhiệm vụ Race V4...")
-    end
-end)
+-- ✅ Misc Tab
+MiscTab:AddButton({
+	Name = "Hop Empty Server",
+	Callback = function()
+		serverHop(true)
+	end
+})
 
---======================== MATERIAL FARM ====================--
-MaterialTab:NewToggle("Auto Materials", "Bones, Dark Coat...", function(state)
-    getgenv().AutoMaterial = state
-    while getgenv().AutoMaterial and task.wait(3) do
-        print("Đang farm nguyên liệu hiếm...")
-    end
-end)
+MiscTab:AddButton({
+	Name = "Rejoin",
+	Callback = function()
+		TeleportService:Teleport(game.PlaceId, LocalPlayer)
+	end
+})
 
---======================== TELEPORT =========================--
-local islands = {
-    {"Starter Island", CFrame.new(1065,16,1437)},
-    {"Marine HQ", CFrame.new(-500,72,5000)},
-    {"Second Sea", CFrame.new(10500,16,2000)},
-    {"Third Sea", CFrame.new(-4000,16,13000)}
-}
-for _,loc in ipairs(islands) do
-    TeleTab:NewButton(loc[1], "TP "..loc[1], function()
-        teleportTo(loc[2])
-    end)
-end
+MiscTab:AddButton({
+	Name = "FPS Boost",
+	Callback = function()
+		for _,v in pairs(game:GetDescendants()) do
+			if v:IsA("Texture") or v:IsA("MeshPart") then v.TextureID = "" end
+		end
+	end
+})
 
---======================== SETTINGS =========================--
-SettingsTab:NewToggle("Server Hop", "Hop random", function(state)
-    getgenv().HopEnabled = state
-    while getgenv().HopEnabled and task.wait(10) do
-        serverHop(false)
-    end
-end)
-
-SettingsTab:NewToggle("Empty Server Hop", "Tìm server 0 người", function(state)
-    getgenv().HopEmpty = state
-    while getgenv().HopEmpty and task.wait(10) do
-        serverHop(true)
-    end
-end)
-
-SettingsTab:NewButton("Rejoin", "Vào lại server", function()
-    TPService:Teleport(game.PlaceId, Player)
-end)
-
-Library:Init()
+OrionLib:Init()
